@@ -7,6 +7,7 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,9 +24,9 @@ class FilmValidationTest {
         }
     }
 
-    //Name проверки
-    @Test
+    // Name проверки
     // Проверка создания Film, в котором поле name корректно
+    @Test
     void shouldSuccessValidationWhenNameIsCorrect() {
         Film film = new Film();
         film.setName("test");
@@ -35,8 +36,8 @@ class FilmValidationTest {
         assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации");
     }
 
+    // Проверка создания Film, в котором поле name = null
     @Test
-        // Проверка создания Film, в котором поле name = null
     void shouldFailValidationWhenNameIsNull() {
         Film film = new Film();
         film.setName(null);
@@ -49,8 +50,8 @@ class FilmValidationTest {
                 "Ошибка должна быть в поле name");
     }
 
+    // Проверка создания Film, в котором поле name = пустая строка
     @Test
-        // Проверка создания Film, в котором поле name = пустая строка
     void shouldFailValidationWhenNameIsBlank() {
         Film film = new Film();
         film.setName("");
@@ -63,9 +64,9 @@ class FilmValidationTest {
                 "Ошибка должна быть в поле name");
     }
 
-    //Description проверки
-    @Test
+    // Description проверки
     // Проверка создания Film, в котором поле description корректно
+    @Test
     void shouldSuccessValidationWhenDescriptionLessThan200() {
         Film film = new Film();
         film.setName("test");
@@ -76,8 +77,8 @@ class FilmValidationTest {
         assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации");
     }
 
+    // Проверка создания Film, в котором поле description > 200
     @Test
-        // Проверка создания Film, в котором поле description > 200
     void shouldFailValidationWhenDescriptionMoreThan200() {
         Film film = new Film();
         film.setName("test");
@@ -92,8 +93,8 @@ class FilmValidationTest {
     }
 
     // Duration проверки
-    @Test
     // Проверка создания Film, в котором поле duration корректно
+    @Test
     void shouldSuccessValidationWhenDurationIsPositive() {
         Film film = new Film();
         film.setName("test");
@@ -104,8 +105,8 @@ class FilmValidationTest {
         assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации");
     }
 
+    // Проверка создания Film, в котором поле duration отрицательно
     @Test
-        // Проверка создания Film, в котором поле duration отрицательно
     void shouldFailValidationWhenDurationIsNegative() {
         Film film = new Film();
         film.setName("test");
@@ -117,5 +118,33 @@ class FilmValidationTest {
         ConstraintViolation<Film> violation = violations.iterator().next();
         assertEquals("duration", violation.getPropertyPath().toString(),
                 "Ошибка должна быть в поле duration");
+    }
+
+    // ReleaseDate проверки
+    // Проверка создания Film, в котором поле releaseDate корректно
+    @Test
+    void shouldSuccessValidationWhenReleaseDateIsCorrect() {
+        Film film = new Film();
+        film.setName("test");
+        film.setReleaseDate(LocalDate.of(1895, 12, 28));
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.isEmpty(), "Не должно быть ошибок валидации");
+    }
+
+    // Проверка создания Film, в котором поле releaseDate некорректно
+    @Test
+    void shouldSuccessValidationWhenReleaseDateIsIncorrect() {
+        Film film = new Film();
+        film.setName("test");
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertEquals(1, violations.size(), "Должна быть 1 ошибка");
+        ConstraintViolation<Film> violation = violations.iterator().next();
+        assertEquals("releaseDate", violation.getPropertyPath().toString(),
+                "Ошибка должна быть в поле releaseDate");
     }
 }

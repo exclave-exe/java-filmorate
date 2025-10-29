@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.validation.UsernameValid;
 
 import java.time.LocalDate;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
  */
 
 @Data
+@UsernameValid // Собственная аннотация
 public class User {
     private Long id;
 
@@ -24,7 +26,7 @@ public class User {
     @Pattern(regexp = "^\\S+$", message = "Логин не должен содержать пробелы")
     private String login;
 
-    private String name; // Валидация в UserController
+    private String name;
 
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;

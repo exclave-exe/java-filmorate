@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.validation.ReleaseDateValid;
 
 import java.time.LocalDate;
 
@@ -21,7 +22,8 @@ public class Film {
     @Size(max = 200, message = "Описание не должно превышать 200 символов")
     private String description;
 
-    private LocalDate releaseDate; // Валидация в FilmController
+    @ReleaseDateValid // Собственная аннотация
+    private LocalDate releaseDate;
 
     @Positive
     private Integer duration;

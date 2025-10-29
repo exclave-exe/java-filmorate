@@ -4,10 +4,8 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,12 +25,6 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film newFilm) {
         log.info("Получен запрос на создание фильма: {}", newFilm.getName());
-
-        if (newFilm.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.error("Попытка создать фильм с некорректной датой релиза: {}", newFilm.getReleaseDate());
-            throw new ValidationException("дата релиза не может быть раньше 28 декабря 1895 года;");
-        }
-
         long newId = getNextId();
         newFilm.setId(newId);
         films.put(newId, newFilm);
