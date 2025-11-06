@@ -41,7 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film updateFilm(Film newFilm) {
         if (!films.containsKey(newFilm.getId())) {
             log.error("Обновление невозможно — фильм не найден filmId={}", newFilm.getId());
-            throw new NotFoundException("Фильм c ID: " + newFilm.getId() +" не найден");
+            throw new NotFoundException("Фильм c ID: " + newFilm.getId() + " не найден");
         }
 
         Film oldFilm = films.get(newFilm.getId());

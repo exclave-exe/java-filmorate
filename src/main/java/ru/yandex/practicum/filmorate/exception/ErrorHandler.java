@@ -11,8 +11,8 @@ import java.util.Map;
 @RestControllerAdvice({"ru.yandex.practicum.filmorate.controller", "ru.yandex.practicum.filmorate.storage"})
 public class ErrorHandler {
 
-    @ExceptionHandler({ jakarta.validation.ValidationException.class,
-                        jakarta.validation.ConstraintViolationException.class })
+    @ExceptionHandler({jakarta.validation.ValidationException.class,
+            jakarta.validation.ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleValidation(Exception e) {
         return Map.of("status", "400", "error", "Bad Request", "message", e.getMessage());
