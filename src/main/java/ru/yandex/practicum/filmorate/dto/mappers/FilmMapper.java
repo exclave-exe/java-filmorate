@@ -5,21 +5,16 @@ import ru.yandex.practicum.filmorate.dto.FilmCreateDto;
 import ru.yandex.practicum.filmorate.dto.FilmResponseDto;
 import ru.yandex.practicum.filmorate.dto.FilmUpdateDto;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class FilmMapper {
 
-    public FilmResponseDto toResponseDto(Film film) {
+    public FilmResponseDto filmToResponseDto(Film film) {
         if (film == null) {
             return null;
         }
-
         FilmResponseDto dto = new FilmResponseDto();
         dto.setId(film.getId());
         dto.setName(film.getName());
@@ -31,41 +26,35 @@ public class FilmMapper {
         return dto;
     }
 
-    public Film fromCreateDto(FilmCreateDto dto) {
+    public Film createDtoToFilm(FilmCreateDto filmCreateDto) {
         Film film = new Film();
-        film.setName(dto.getName());
-        film.setDescription(dto.getDescription());
-        film.setReleaseDate(dto.getReleaseDate());
-        film.setDuration(dto.getDuration());
-
-        Mpa mpa = new Mpa();
-        mpa.setId(dto.getMpaId());
-        film.setMpa(mpa);
-
-        if (dto.getGenres() != null && !dto.getGenres().isEmpty()) {
-            Set<Genre> genres = dto.getGenres().stream()
-                    .map(id -> {
-                        Genre g = new Genre();
-                        g.setId(id);
-                        return g;
-                    })
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-            film.setGenres(genres);
-        }
-
+        film.setName(filmCreateDto.getName());
+        film.setDescription(filmCreateDto.getDescription());
+        film.setReleaseDate(filmCreateDto.getReleaseDate());
+        film.setDuration(filmCreateDto.getDuration());
+        film.setMpa(filmCreateDto.getMpa());
+        film.setGenres(
+                filmCreateDto.getGenres() == null
+                        ? null
+                        : new LinkedHashSet<>(filmCreateDto.getGenres())
+        );
         return film;
     }
 
-    public Film fromUpdateDto(FilmUpdateDto dto) {
-        Film film = fromCreateDto(new FilmCreateDto(
-                dto.getName(),
-                dto.getDescription(),
-                dto.getReleaseDate(),
-                dto.getDuration(),
-                dto.getMpaId(),
-                dto.getGenres()
-        ));
-        film.setId(dto.getId());
+    public Film updateDtoToFilm(FilmUpdateDto filmUpdateDto) {
+        Film film = new Film();
+        film.setId(filmUpdateDto.getId());
+        film.setName(filmUpdateDto.getName());
+        film.setDescription(filmUpdateDto.getDescription());
+        film.setReleaseDate(filmUpdateDto.getReleaseDate());
+        film.setDuration(filmUpdateDto.getDuration());
+        film.setMpa(filmUpdateDto.getMpa());
+        film.setGenres(
+                filmUpdateDto.getGenres() == null
+                        ? null
+                        : new LinkedHashSet<>(filmUpdateDto.getGenres())
+        );
         return film;
     }
 }
+

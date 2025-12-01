@@ -34,9 +34,9 @@ public class ErrorHandler {
         return Map.of("status", "404", "error", "Not Found", "message", e.getMessage());
     }
 
-//    @ExceptionHandler
-//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    public Map<String, String> handleAll(Exception e) {
-//        return Map.of("status", "500", "error", "Internal Server Error", "message", "Unexpected error");
-//    }
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleAll(Exception e) {
+        return Map.of("status", "500", "error", "Internal Server Error", "message", "Unexpected error");
+    }
 }

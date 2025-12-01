@@ -29,8 +29,8 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserResponseDto getUserById(long id) {
-        return userMapper.userToResponseDto(validateUserExists(id));
+    public UserResponseDto getUserById(long userId) {
+        return userMapper.userToResponseDto(validateUserExists(userId));
     }
 
     @Transactional

@@ -21,7 +21,8 @@ public class GenreRepository extends BaseRepository<Genre> {
         return findMany(SELECT_ALL_GENRES);
     }
 
-    public Optional<Genre> getGenreById(Integer id) {
-        return findOne(SELECT_GENRE_BY_ID, id);
+    public Optional<Genre> getGenreById(Integer genreId) {
+        return findOne(SELECT_GENRE_BY_ID, genreId);
     }
 }
+

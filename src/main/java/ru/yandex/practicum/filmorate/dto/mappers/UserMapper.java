@@ -13,13 +13,26 @@ public class UserMapper {
             return null;
         }
 
-        UserResponseDto dto = new UserResponseDto();
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setLogin(user.getLogin());
-        dto.setName(user.getName());
-        dto.setBirthday(user.getBirthday());
-        return dto;
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setId(user.getId());
+        userResponseDto.setEmail(user.getEmail());
+        userResponseDto.setLogin(user.getLogin());
+        userResponseDto.setName(user.getName());
+        userResponseDto.setBirthday(user.getBirthday());
+        return userResponseDto;
+    }
+
+    public User createDtoToUser(UserCreateDto userCreateDto) {
+        if (userCreateDto == null) {
+            return null;
+        }
+
+        User user = new User();
+        user.setEmail(userCreateDto.getEmail());
+        user.setLogin(userCreateDto.getLogin());
+        user.setName(userCreateDto.getName());
+        user.setBirthday(userCreateDto.getBirthday());
+        return user;
     }
 
     public User updateDtoToUser(UserUpdateDto userUpdateDto) {
@@ -33,19 +46,6 @@ public class UserMapper {
         user.setLogin(userUpdateDto.getLogin());
         user.setName(userUpdateDto.getName());
         user.setBirthday(userUpdateDto.getBirthday());
-        return user;
-    }
-
-    public User createDtoToUser(UserCreateDto userCreateDto) {
-        if (userCreateDto == null) {
-            return null;
-        }
-
-        User user = new User();
-        user.setEmail(userCreateDto.getEmail());
-        user.setLogin(userCreateDto.getLogin());
-        user.setName(userCreateDto.getName());
-        user.setBirthday(userCreateDto.getBirthday());
         return user;
     }
 }

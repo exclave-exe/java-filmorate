@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-public class BaseRepository <T> {
+public class BaseRepository<T> {
     protected final JdbcTemplate jdbcTemplate;
     protected final RowMapper<T> rowMapper;
 
-    protected Optional<T> findOne(String sqlQuery, Object... args){
+    protected Optional<T> findOne(String sqlQuery, Object... args) {
         try {
             T result = jdbcTemplate.queryForObject(sqlQuery, rowMapper, args);
             return Optional.of(result);
@@ -22,7 +22,7 @@ public class BaseRepository <T> {
         }
     }
 
-    protected List<T> findMany(String sqlQuery, Object... args){
+    protected List<T> findMany(String sqlQuery, Object... args) {
         return jdbcTemplate.query(sqlQuery, args, rowMapper);
     }
 }

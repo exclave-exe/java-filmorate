@@ -19,57 +19,48 @@ import java.util.stream.Collectors;
 
 @Repository
 public class FilmRepository extends BaseRepository<Film> {
-    private static final String SELECT_ALL_FILMS =
-            "SELECT * FROM films ORDER BY id";
-
-    private static final String SELECT_FILM_BY_ID =
-            "SELECT * FROM films WHERE id = ?";
+    private static final String SELECT_ALL_FILMS = "SELECT * FROM films ORDER BY id";
+    private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
+    private static final String INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
+    private static final String DELETE_LIKE = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
 
     private static final String INSERT_FILM = """
-        INSERT INTO films (name, description, release_date, duration, mpa_id)
-        VALUES (?, ?, ?, ?, ?)
-        """;
-
-    private static final String UPDATE_FILM = """
-        UPDATE films
-        SET name         = ?,
-            description  = ?,
-            release_date = ?,
-            duration     = ?,
-            mpa_id       = ?
-        WHERE id = ?
-        """;
+            INSERT INTO films (name, description, release_date, duration, mpa_id)
+            VALUES (?, ?, ?, ?, ?)
+            """;
 
     private static final String INSERT_LIKE = """
-        INSERT INTO film_likes (film_id, user_id)
-        VALUES (?, ?)
-        """;
-
-    private static final String DELETE_LIKE =
-            "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+            INSERT INTO film_likes (film_id, user_id)
+            VALUES (?, ?)
+            """;
 
     private static final String SELECT_POPULAR_FILMS = """
-        SELECT f.*
-        FROM films f
-        LEFT JOIN film_likes fl ON f.id = fl.film_id
-        GROUP BY f.id
-        ORDER BY COUNT(fl.user_id) DESC, f.id
-        LIMIT ?
-        """;
-
-    private static final String INSERT_FILM_GENRE =
-            "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-
-    private static final String DELETE_FILM_GENRES =
-            "DELETE FROM film_genres WHERE film_id = ?";
+            SELECT f.*
+            FROM films f
+            LEFT JOIN film_likes fl ON f.id = fl.film_id
+            GROUP BY f.id
+            ORDER BY COUNT(fl.user_id) DESC, f.id
+            LIMIT ?
+            """;
 
     private static final String SELECT_FILM_GENRES = """
-        SELECT g.id, g.name
-        FROM genres g
-        JOIN film_genres fg ON g.id = fg.genre_id
-        WHERE fg.film_id = ?
-        ORDER BY g.id
-        """;
+            SELECT g.id, g.name
+            FROM genres g
+            JOIN film_genres fg ON g.id = fg.genre_id
+            WHERE fg.film_id = ?
+            ORDER BY g.id
+            """;
+
+    private static final String UPDATE_FILM = """
+            UPDATE films
+            SET name         = ?,
+                description  = ?,
+                release_date = ?,
+                duration     = ?,
+                mpa_id       = ?
+            WHERE id = ?
+            """;
 
     private final RowMapper<Genre> genreRowMapper;
     private final MpaRepository mpaRepository;
@@ -172,10 +163,6 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     private void loadFilmMpa(Film film) {
-        if (film.getMpa() == null || film.getMpa().getId() == null) {
-            return;
-        }
-        mpaRepository.getMpaById(film.getMpa().getId())
-                .ifPresent(film::setMpa);
+        mpaRepository.getMpaById(film.getMpa().getId()).ifPresent(film::setMpa);
     }
 }

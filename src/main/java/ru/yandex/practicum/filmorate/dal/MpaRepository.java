@@ -21,7 +21,7 @@ public class MpaRepository extends BaseRepository<Mpa> {
         return findMany(SELECT_ALL_MPA);
     }
 
-    public Optional<Mpa> getMpaById(Integer id) {
-        return findOne(SELECT_MPA_BY_ID, id);
+    public Optional<Mpa> getMpaById(Integer mpaId) {
+        return findOne(SELECT_MPA_BY_ID, mpaId);
     }
 }
