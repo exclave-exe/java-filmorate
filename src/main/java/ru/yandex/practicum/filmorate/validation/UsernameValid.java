@@ -3,16 +3,19 @@ package ru.yandex.practicum.filmorate.validation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
+@Documented
+@Constraint(validatedBy = {
+        UsernameCreateDtoValidator.class,
+        UsernameUpdateDtoValidator.class,
+        UsernameValidator.class
+})
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = UsernameValidator.class)
 public @interface UsernameValid {
-    String message() default "Некорректное имя пользователя";
+
+    String message() default "Invalid username";
 
     Class<?>[] groups() default {};
 

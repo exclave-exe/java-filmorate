@@ -1,4 +1,21 @@
 package ru.yandex.practicum.filmorate.dto;
 
-public class UserDto {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class UserResponseDto {
+    private Long id;
+    private String email;
+    private String login;
+    private String name;
+    private LocalDate birthday;
 }
+

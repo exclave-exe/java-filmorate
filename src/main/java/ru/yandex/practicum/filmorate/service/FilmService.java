@@ -1,66 +1,102 @@
 package ru.yandex.practicum.filmorate.service;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
+import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+
+    private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
+    private final MpaRepository mpaRepository;
+    private final GenreRepository genreRepository;
 
     public Collection<Film> getFilms() {
-        return filmStorage.getFilms().values();
+        return filmRepository.getFilms();
     }
 
-    public Film createFilm(@Valid @RequestBody Film newFilm) {
-        return filmStorage.createFilm(newFilm);
+    public Film getFilmById(long id) {
+        return validateFilmExists(id);
     }
 
-    public Film updateFilm(@Valid @RequestBody Film newFilm) {
-        return filmStorage.updateFilm(newFilm);
+    @Transactional
+    public Film createFilm(Film film) {
+        validateFilmRefs(film);
+        Long id = filmRepository.createFilm(film);
+        return validateFilmExists(id);
+    }
+
+    @Transactional
+    public Film updateFilm(Film film) {
+        validateFilmExists(film.getId());
+        validateFilmRefs(film);
+        filmRepository.updateFilm(film);
+        return validateFilmExists(film.getId());
     }
 
     public Collection<Film> getPopularFilms(long count) {
-        Collection<Film> popularFilms = filmStorage.getFilms().values().stream()
-                .sorted((f1, f2) -> Integer.compare(
-                        f2.getUserIdsWhoLiked().size(),
-                        f1.getUserIdsWhoLiked().size()))
-                .limit(count)
-                .toList();
-        log.debug("Найдено популярных фильмов: {} (запрошено: {})", popularFilms.size(), count);
-        return popularFilms;
+        return filmRepository.getPopularFilms(count);
     }
 
-    public void deleteLike(long userId, long filmId) {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
-        boolean removed = film.getUserIdsWhoLiked().remove(user.getId());
-        if (removed) {
-            log.info("Лайк удалён userId={} filmId={}", userId, filmId);
-        } else {
-            log.debug("Лайк не был удалён поскольку отсутствовал userId={} filmId={}", userId, filmId);
-        }
-    }
-
+    @Transactional
     public void addLike(long userId, long filmId) {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
-        boolean added = film.getUserIdsWhoLiked().add(user.getId());
-        if (added) {
-            log.info("Лайк добавлен userId={} filmId={}", userId, filmId);
-        } else {
-            log.debug("Лайк не был добавлен поскольку уже присутствовал userId={} filmId={}", userId, filmId);
+        validateFilmExists(filmId);
+        validateUserExists(userId);
+        filmRepository.addLike(filmId, userId);
+    }
+
+    @Transactional
+    public void deleteLike(long userId, long filmId) {
+        validateFilmExists(filmId);
+        validateUserExists(userId);
+        filmRepository.deleteLike(filmId, userId);
+    }
+
+    private void validateFilmRefs(Film film) {
+        Mpa mpa = film.getMpa();
+        if (mpa == null || mpa.getId() == null ||
+                mpaRepository.getMpaById(mpa.getId()).isEmpty()) {
+            throw new NotFoundException("MPA с id=" + (mpa != null ? mpa.getId() : null) + " не найден");
         }
+
+        Set<Genre> genres = film.getGenres();
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+
+        Set<Integer> ids = genres.stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        for (Integer id : ids) {
+            if (genreRepository.getGenreById(id).isEmpty()) {
+                throw new NotFoundException("Жанр с id=" + id + " не найден");
+            }
+        }
+    }
+
+    private User validateUserExists(long userId) {
+        return userRepository.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+    }
+
+    private Film validateFilmExists(long filmId) {
+        return filmRepository.getFilmById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 }

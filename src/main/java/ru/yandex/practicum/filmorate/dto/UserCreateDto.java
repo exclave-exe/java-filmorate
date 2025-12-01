@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Data
 @UsernameValid // Собственная аннотация
-public class UserRequestDto {
+public class UserCreateDto {
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Email должен содержать символ: @")
     private String email;
