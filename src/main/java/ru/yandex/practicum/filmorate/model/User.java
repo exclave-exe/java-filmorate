@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Data
 @UsernameValid // Собственная аннотация
 public class User {
-    @NotNull
     private Long id;
 
     @NotBlank(message = "Email не может быть пустым")

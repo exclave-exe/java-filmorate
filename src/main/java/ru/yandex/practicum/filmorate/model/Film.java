@@ -12,7 +12,6 @@ import java.util.Set;
 
 @Data
 public class Film {
-    @NotNull
     private Long id;
 
     @NotBlank(message = "Name не может быть пустым")
@@ -27,7 +26,6 @@ public class Film {
     @Positive
     private Integer duration;
 
-    @NotNull
     private Mpa mpa;
 
     private Set<Genre> genres;
