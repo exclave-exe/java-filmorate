@@ -11,16 +11,11 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
 public class FilmRepository extends BaseRepository<Film> {
-    private static final String SELECT_ALL_FILMS = "SELECT * FROM films ORDER BY id";
-    private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_FILM_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
     private static final String DELETE_LIKE = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
@@ -35,20 +30,11 @@ public class FilmRepository extends BaseRepository<Film> {
             VALUES (?, ?)
             """;
 
-    private static final String SELECT_POPULAR_FILMS = """
-            SELECT f.*
-            FROM films f
-            LEFT JOIN film_likes fl ON f.id = fl.film_id
-            GROUP BY f.id
-            ORDER BY COUNT(fl.user_id) DESC, f.id
-            LIMIT ?
-            """;
-
-    private static final String SELECT_FILM_GENRES = """
-            SELECT g.id, g.name
-            FROM genres g
-            JOIN film_genres fg ON g.id = fg.genre_id
-            WHERE fg.film_id = ?
+    private static final String SELECT_FILM_GENRES_BY_FILMS_ID = """
+            SELECT fg.film_id, g.id, g.name
+            FROM film_genres fg
+            JOIN genres g ON g.id = fg.genre_id
+            WHERE fg.film_id IN (%s)
             ORDER BY g.id
             """;
 
@@ -62,43 +48,71 @@ public class FilmRepository extends BaseRepository<Film> {
             WHERE id = ?
             """;
 
-    private final RowMapper<Genre> genreRowMapper;
-    private final MpaRepository mpaRepository;
+    private static final String SELECT_ALL_FILMS = """
+            SELECT f.id,
+                   f.name,
+                   f.description,
+                   f.release_date,
+                   f.duration,
+                   f.mpa_id,
+                   m.name AS mpa_name
+            FROM films f
+            JOIN mpa m ON m.id = f.mpa_id
+            ORDER BY f.id
+            """;
 
-    public FilmRepository(JdbcTemplate jdbcTemplate,
-                          RowMapper<Film> filmRowMapper,
-                          RowMapper<Genre> genreRowMapper,
-                          MpaRepository mpaRepository) {
+    private static final String SELECT_FILM_BY_ID = """
+            SELECT f.id,
+                   f.name,
+                   f.description,
+                   f.release_date,
+                   f.duration,
+                   f.mpa_id,
+                   m.name AS mpa_name
+            FROM films f
+            JOIN mpa m ON m.id = f.mpa_id
+            WHERE f.id = ?
+            """;
+
+    private static final String SELECT_POPULAR_FILMS = """
+            SELECT f.id,
+                   f.name,
+                   f.description,
+                   f.release_date,
+                   f.duration,
+                   f.mpa_id,
+                   m.name AS mpa_name
+            FROM films f
+            JOIN mpa m ON m.id = f.mpa_id
+            LEFT JOIN film_likes fl ON f.id = fl.film_id
+            GROUP BY f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name
+            ORDER BY COUNT(fl.user_id) DESC, f.id
+            LIMIT ?
+            """;
+
+    private final RowMapper<Genre> genreRowMapper;
+
+    public FilmRepository(JdbcTemplate jdbcTemplate, RowMapper<Film> filmRowMapper, RowMapper<Genre> genreRowMapper) {
         super(jdbcTemplate, filmRowMapper);
         this.genreRowMapper = genreRowMapper;
-        this.mpaRepository = mpaRepository;
     }
 
     public Collection<Film> getFilms() {
         Collection<Film> films = findMany(SELECT_ALL_FILMS);
-        films.forEach(f -> {
-            loadFilmGenres(f);
-            loadFilmMpa(f);
-        });
+        loadGenresForFilms(films);
         return films;
     }
 
     public Optional<Film> getFilmById(Long id) {
         Optional<Film> filmOpt = findOne(SELECT_FILM_BY_ID, id);
-        filmOpt.ifPresent(f -> {
-            loadFilmGenres(f);
-            loadFilmMpa(f);
-        });
+        filmOpt.ifPresent(film -> loadGenresForFilms(List.of(film)));
         return filmOpt;
     }
 
     public Long createFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
-            PreparedStatement ps = con.prepareStatement(
-                    INSERT_FILM,
-                    Statement.RETURN_GENERATED_KEYS
-            );
+            PreparedStatement ps = con.prepareStatement(INSERT_FILM, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -127,10 +141,7 @@ public class FilmRepository extends BaseRepository<Film> {
 
     public Collection<Film> getPopularFilms(long count) {
         Collection<Film> films = findMany(SELECT_POPULAR_FILMS, count);
-        films.forEach(f -> {
-            loadFilmGenres(f);
-            loadFilmMpa(f);
-        });
+        loadGenresForFilms(films);
         return films;
     }
 
@@ -143,26 +154,47 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     private void saveFilmGenres(Long filmId, Set<Genre> genres) {
-        if (genres == null || genres.isEmpty()) {
-            return;
-        }
-        Set<Integer> ids = genres.stream()
+        if (genres == null || genres.isEmpty()) return;
+
+        Set<Integer> genreIds = genres.stream()
                 .map(Genre::getId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        for (Integer genreId : ids) {
-            jdbcTemplate.update(INSERT_FILM_GENRE, filmId, genreId);
-        }
-    }
-
-    private void loadFilmGenres(Film film) {
-        Set<Genre> genres = new LinkedHashSet<>(
-                jdbcTemplate.query(SELECT_FILM_GENRES, genreRowMapper, film.getId())
+        jdbcTemplate.batchUpdate(
+                INSERT_FILM_GENRE,
+                genreIds,
+                genreIds.size(),
+                (ps, genreId) -> {
+                    ps.setLong(1, filmId);
+                    ps.setInt(2, genreId);
+                }
         );
-        film.setGenres(genres);
     }
 
-    private void loadFilmMpa(Film film) {
-        mpaRepository.getMpaById(film.getMpa().getId()).ifPresent(film::setMpa);
+    private void loadGenresForFilms(Collection<Film> films) {
+        if (films == null || films.isEmpty()) return;
+
+        List<Long> filmIds = films.stream()
+                .map(Film::getId)
+                .toList();
+
+        String placeholders = filmIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = SELECT_FILM_GENRES_BY_FILMS_ID.formatted(placeholders);
+
+        Map<Long, Set<Genre>> genresByFilmId = new LinkedHashMap<>();
+
+        jdbcTemplate.query(sql, filmIds.toArray(), rs -> {
+            Long filmId = rs.getLong("film_id");
+            Genre genre = genreRowMapper.mapRow(rs, -1);
+            genresByFilmId.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
+        });
+
+        films.forEach(film -> {
+            Set<Genre> genres = genresByFilmId.getOrDefault(film.getId(), new LinkedHashSet<>());
+            film.setGenres(genres);
+        });
     }
 }

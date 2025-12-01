@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.LinkedHashSet;
 
 @Component
@@ -17,18 +16,13 @@ public class FilmRowMapper implements RowMapper<Film> {
     @Override
     public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
         Film film = new Film();
-
         film.setId(rs.getLong("id"));
         film.setName(rs.getString("name"));
         film.setDescription(rs.getString("description"));
-        LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
-        film.setReleaseDate(releaseDate);
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
         film.setGenres(new LinkedHashSet<Genre>());
-        Mpa mpa = new Mpa();
-        mpa.setId(rs.getInt("mpa_id"));
-        film.setMpa(mpa);
-
+        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")));
         return film;
     }
 }
