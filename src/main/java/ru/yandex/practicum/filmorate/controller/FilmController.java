@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmCreateDto;
+import ru.yandex.practicum.filmorate.dto.FilmResponseDto;
+import ru.yandex.practicum.filmorate.dto.FilmUpdateDto;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
@@ -20,25 +22,31 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> getFilms() {
+    public Collection<FilmResponseDto> getFilms() {
         log.info("Запрошен список фильмов");
         return filmService.getFilms();
     }
 
+    @GetMapping("/{id}")
+    public FilmResponseDto getFilmById(@PathVariable @Positive long id) {
+        log.info("Запрошен фильм id={}", id);
+        return filmService.getFilmById(id);
+    }
+
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film newFilm) {
-        log.info("Запрошено создание фильма: {}", newFilm.getName());
-        return filmService.createFilm(newFilm);
+    public FilmResponseDto createFilm(@Valid @RequestBody FilmCreateDto filmCreateDto) {
+        log.info("Запрошено создание фильма: {}", filmCreateDto.getName());
+        return filmService.createFilm(filmCreateDto);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film newFilm) {
-        log.info("Запрошено обновление фильма filmId={}", newFilm.getId());
-        return filmService.updateFilm(newFilm);
+    public FilmResponseDto updateFilm(@Valid @RequestBody FilmUpdateDto filmUpdateDto) {
+        log.info("Запрошено обновление фильма filmId={}", filmUpdateDto.getId());
+        return filmService.updateFilm(filmUpdateDto);
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") long count) {
+    public Collection<FilmResponseDto> getPopularFilms(@RequestParam(defaultValue = "10") @Positive long count) {
         log.info("Запрошены популярные фильмы count={}", count);
         return filmService.getPopularFilms(count);
     }

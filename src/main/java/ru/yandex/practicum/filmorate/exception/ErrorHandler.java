@@ -8,11 +8,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
-@RestControllerAdvice({"ru.yandex.practicum.filmorate.controller", "ru.yandex.practicum.filmorate.storage"})
+@RestControllerAdvice({"ru.yandex.practicum.filmorate"})
 public class ErrorHandler {
 
     @ExceptionHandler({jakarta.validation.ValidationException.class,
-            jakarta.validation.ConstraintViolationException.class})
+            jakarta.validation.ConstraintViolationException.class,
+            ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleValidation(Exception e) {
         return Map.of("status", "400", "error", "Bad Request", "message", e.getMessage());
